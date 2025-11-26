@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
-const GameArea = ({ artist, mode, onGameOver, onQuit }) => {
+const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
     const [currentSong, setCurrentSong] = useState(null);
     const [revealedLines, setRevealedLines] = useState(1);
     const [guess, setGuess] = useState('');
     const [feedback, setFeedback] = useState('');
     const [secondsElapsed, setSecondsElapsed] = useState(0);
     const [timerActive, setTimerActive] = useState(false);
+    const [playedSongs, setPlayedSongs] = useState(new Set());
 
     useEffect(() => {
         if (artist) {
-            startNewRound();
+            // Reset history when artist changes (or on initial mount)
+            // But wait, if we are just triggering new round, we don't want to reset history.
+            // This effect runs when artist changes.
+            setPlayedSongs(new Set());
+            startNewRound(true); // true = reset history
         }
-    }, [artist, mode]);
+    }, [artist]);
+
+    useEffect(() => {
+        if (triggerNewRound > 0) {
+            startNewRound(false);
+        }
+    }, [triggerNewRound]);
 
     // Timer & Auto-Reveal Logic for Chrono Mode
     useEffect(() => {
@@ -48,9 +59,27 @@ const GameArea = ({ artist, mode, onGameOver, onQuit }) => {
     }, [secondsElapsed, mode, timerActive, currentSong]);
 
 
-    const startNewRound = () => {
-        const randomSong = artist.songs[Math.floor(Math.random() * artist.songs.length)];
+    const startNewRound = (resetHistory = false) => {
+        let currentPlayed = resetHistory ? new Set() : playedSongs;
+
+        // Filter available songs
+        const availableSongs = artist.songs.filter(song => !currentPlayed.has(song.id));
+
+        if (availableSongs.length === 0) {
+            alert("Vous avez joué toutes les chansons de cet artiste !");
+            onQuit(); // Go back to menu
+            return;
+        }
+
+        const randomSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+
         setCurrentSong(randomSong);
+        setPlayedSongs(prev => {
+            const newSet = resetHistory ? new Set() : new Set(prev);
+            newSet.add(randomSong.id);
+            return newSet;
+        });
+
         setRevealedLines(1);
         setGuess('');
         setFeedback('');

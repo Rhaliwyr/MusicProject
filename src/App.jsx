@@ -14,6 +14,7 @@ function App() {
     const [gameMode, setGameMode] = useState(null); // 'original', 'fr', 'synonym', 'emoji'
     const [score, setScore] = useState(0);
     const [modalData, setModalData] = useState({ show: false, points: 0 });
+    const [triggerNewRound, setTriggerNewRound] = useState(0);
 
     useEffect(() => {
         getArtists();
@@ -61,6 +62,11 @@ function App() {
         setGameMode(null);
     };
 
+    const handleAnotherOne = () => {
+        setModalData({ show: false, points: 0 });
+        setTriggerNewRound(prev => prev + 1);
+    };
+
     const handleBackToSearch = () => {
         setSelectedArtist(null);
         setGameMode(null);
@@ -72,7 +78,7 @@ function App() {
         let listenerAdded = false;
         const handleKeyDown = (e) => {
             if (e.key === 'Enter') {
-                closeModal();
+                handleAnotherOne();
             }
         };
 
@@ -124,6 +130,7 @@ function App() {
                         mode={gameMode}
                         onGameOver={handleGameOver}
                         onQuit={closeModal}
+                        triggerNewRound={triggerNewRound}
                     />
                 )}
             </main>
@@ -138,7 +145,8 @@ function App() {
                         </div>
                         <p className="points-gained">+{modalData.points} Points</p>
                         <div className="modal-actions">
-                            <button onClick={closeModal} className="next-btn">Next Round (Enter)</button>
+                            <button onClick={handleAnotherOne} className="next-btn">Another One (Enter)</button>
+                            <button onClick={closeModal} className="menu-btn">Menu</button>
                             <a
                                 href={`https://www.youtube.com/results?search_query=${encodeURIComponent(modalData.artistName + ' ' + modalData.songTitle)}`}
                                 target="_blank"

@@ -470,6 +470,200 @@ h1 {
     margin: 1rem 0;
 }
 
+.modal-song-info h3 {}
+
+.mode-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.mode-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.mode-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.mode-badge {
+    background: #646cff;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: #2a2a2a;
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid #444;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    max-width: 90%;
+    width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: auto;
+}
+
+.modal-content h2 {
+    margin: 0 0 1rem 0;
+    font-size: 2rem;
+    color: white;
+}
+
+.points-gained {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #4caf50;
+    margin: 1rem 0 2rem 0;
+    text-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.next-btn {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    width: 100%;
+}
+
+.next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+}
+
+.next-btn:active {
+    transform: translateY(0);
+}
+
+.youtube-btn {
+    background: #ff0000;
+    color: white;
+    text-decoration: none;
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.youtube-btn:hover {
+    background: #cc0000;
+    transform: translateY(-2px);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.quit-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.quit-btn:hover {
+    background: #d32f2f;
+}
+
+.emoji-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+}
+
+.emoji-clues {
+    font-size: 4rem;
+    display: flex;
+    gap: 1rem;
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Logo Styles */
+.app-logo {
+    height: 150px;
+    width: auto;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 10px rgba(100, 108, 255, 0.3));
+}
+
+/* Give Up Button */
+.give-up-btn {
+    background-color: #ff4d4d;
+    color: white;
+    margin-left: 10px;
+}
+
+.give-up-btn:hover {
+    background-color: #cc0000;
+}
+
+.modal-song-info {
+    margin: 1rem 0;
+}
+
 .modal-song-info h3 {
     margin: 0;
     font-size: 1.5rem;
@@ -480,4 +674,22 @@ h1 {
     margin: 0.5rem 0 0;
     font-size: 1.1rem;
     color: #aaa;
+}
+
+.menu-btn {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.menu-btn:hover {
+    background: #777;
+    transform: translateY(-2px);
 }
