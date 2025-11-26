@@ -1,19 +1,20 @@
 import React from 'react';
 
-const ModeSelector = ({ onModeSelect, onBack }) => {
+const ModeSelector = ({ onModeSelect, onBack, artist }) => {
     const modes = [
         { id: 'original', label: 'Original', icon: '🎵', description: 'Classic lyrics' },
         { id: 'chrono', label: 'Chrono', icon: '⏱️', description: 'Lyrics reveal over time' },
         { id: 'fr', label: 'Français', icon: '🇫🇷', description: 'Translated to French' },
         { id: 'synonym', label: 'Synonymes', icon: '📚', description: 'Complex synonyms' },
         { id: 'emoji', label: 'Emoji', icon: '🧩', description: 'Guess from title emojis' },
+        { id: 'easy', label: 'Easy', icon: '🔤', description: 'Hangman style title guess' },
     ];
 
     return (
         <div className="mode-selector-container">
             <div className="mode-header">
                 <button className="back-btn" onClick={onBack}>← Back</button>
-                <h2>Select Game Mode</h2>
+                <h2>Select Game Mode for <span className="artist-name-highlight">{artist?.name}</span></h2>
             </div>
             <div className="modes-grid">
                 {modes.map((mode) => (

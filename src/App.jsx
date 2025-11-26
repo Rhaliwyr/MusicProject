@@ -121,6 +121,7 @@ function App() {
                     <ModeSelector
                         onModeSelect={handleModeSelect}
                         onBack={handleBackToSearch}
+                        artist={selectedArtist}
                     />
                 )}
 

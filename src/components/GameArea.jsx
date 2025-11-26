@@ -8,6 +8,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
     const [secondsElapsed, setSecondsElapsed] = useState(0);
     const [timerActive, setTimerActive] = useState(false);
     const [playedSongs, setPlayedSongs] = useState(new Set());
+    const [revealedTitleIndices, setRevealedTitleIndices] = useState(new Set());
 
     useEffect(() => {
         if (artist) {
@@ -32,10 +33,6 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
             interval = setInterval(() => {
                 setSecondsElapsed(prev => {
                     const newTime = prev + 1;
-                    // Auto-reveal every 3 seconds in Chrono mode
-                    if (mode === 'chrono' && newTime % 3 === 0) {
-                        handleReveal(true); // Pass true to indicate auto-reveal
-                    }
                     return newTime;
                 });
             }, 1000);
@@ -48,13 +45,18 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
 
     // Refined Auto-Reveal Effect
     useEffect(() => {
-        if (mode === 'chrono' && timerActive && secondsElapsed > 0 && secondsElapsed % 3 === 0) {
+        if (!timerActive || secondsElapsed === 0) return;
+
+        if (mode === 'chrono' && secondsElapsed % 3 === 0) {
             setRevealedLines(prev => {
                 if (currentSong && prev < currentSong.lyrics.length) {
                     return prev + 1;
                 }
                 return prev;
             });
+        } else if (mode === 'easy' && secondsElapsed % 5 === 0) {
+            // Easy mode: reveal a letter every 5 seconds
+            revealRandomLetter();
         }
     }, [secondsElapsed, mode, timerActive, currentSong]);
 
@@ -81,6 +83,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         });
 
         setRevealedLines(1);
+        setRevealedTitleIndices(new Set()); // Reset easy mode indices
         setGuess('');
         setFeedback('');
         setSecondsElapsed(0);
@@ -100,6 +103,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
 
     const currentContent = getContent();
     const isEmojiMode = mode === 'emoji';
+    const isEasyMode = mode === 'easy';
 
     const handleReveal = (isAuto = false) => {
         if (currentSong && revealedLines < currentContent.length) {
@@ -109,8 +113,12 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
 
     const maskLyrics = (text, title) => {
         if (!title || isEmojiMode) return text;
+        // Escape special regex characters
         const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedTitle, 'gi');
+        // Replace spaces with \s+ to match newlines or multiple spaces
+        const flexibleTitlePattern = escapedTitle.replace(/ /g, '\\s+');
+
+        const regex = new RegExp(flexibleTitlePattern, 'gi');
         return text.replace(regex, '[***]');
     };
 
@@ -118,6 +126,29 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         if (!currentSong) return;
         setTimerActive(false);
         onGameOver(0, currentSong.title, artist.name);
+    };
+
+    const revealRandomLetter = () => {
+        if (!currentSong) return;
+
+        // Get all indices of letters (ignoring spaces/special chars if we want, but let's keep it simple)
+        // Actually, we should only reveal letters that are not yet revealed.
+        const title = currentSong.title;
+        const unrevealedIndices = [];
+        for (let i = 0; i < title.length; i++) {
+            if (!revealedTitleIndices.has(i) && title[i] !== ' ') {
+                unrevealedIndices.push(i);
+            }
+        }
+
+        if (unrevealedIndices.length > 0) {
+            const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
+            setRevealedTitleIndices(prev => {
+                const newSet = new Set(prev);
+                newSet.add(randomIndex);
+                return newSet;
+            });
+        }
     };
 
     const handleGuess = () => {
@@ -134,6 +165,19 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                 // Chrono: Score based on speed (seconds)
                 // Example: 100 - seconds. Min 10.
                 baseScore = Math.max(100 - secondsElapsed, 10);
+            } else if (mode === 'easy') {
+                // Easy: Score based on percentage of revealed letters
+                // 100 - (percentage revealed)
+                const title = currentSong.title;
+                let totalLetters = 0;
+                for (let i = 0; i < title.length; i++) {
+                    if (title[i] !== ' ') totalLetters++;
+                }
+
+                const revealedCount = revealedTitleIndices.size;
+                const percentageRevealed = totalLetters > 0 ? (revealedCount / totalLetters) * 100 : 0;
+
+                baseScore = Math.max(100 - Math.round(percentageRevealed), 10);
             } else {
                 // Standard: Score based on revealed lines.
                 baseScore = Math.max(100 - (revealedLines * 10), 10);
@@ -151,16 +195,34 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                 <button className="quit-btn" onClick={onQuit}>Quit</button>
                 <h2>Guess the song by {artist.name}</h2>
                 <div className="mode-badge">{mode ? mode.toUpperCase() : 'ORIGINAL'}</div>
-                {mode === 'chrono' && <div className="timer">Time: {secondsElapsed}s</div>}
+                {(mode === 'chrono' || mode === 'easy') && <div className="timer">Time: {secondsElapsed}s</div>}
             </div>
 
-            <div className={`lyrics-box ${isEmojiMode ? 'emoji-box' : ''}`}>
+            <div className={`lyrics-box ${isEmojiMode ? 'emoji-box' : ''} ${isEasyMode ? 'easy-box' : ''}`}>
                 {isEmojiMode ? (
                     <div className="emoji-clues">
                         {currentContent.map((emoji, index) => (
                             <span key={index} className="emoji-clue">{emoji}</span>
                         ))}
                     </div>
+                ) : isEasyMode ? (
+                    <>
+                        <div className="easy-clues">
+                            {currentSong && currentSong.title.split('').map((char, index) => (
+                                <span key={index} className="easy-char">
+                                    {char === ' ' ? '\u00A0\u00A0' : (revealedTitleIndices.has(index) ? char : '_')}
+                                </span>
+                            ))}
+                        </div>
+                        {/* Also show lyrics in Easy mode as requested */}
+                        <div className="easy-lyrics-container">
+                            {currentContent.map((line, index) => (
+                                <p key={index} className="lyric-line">
+                                    {maskLyrics(line, currentSong.title)}
+                                </p>
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <>
                         {currentContent.slice(0, revealedLines).map((line, index) => (
@@ -176,7 +238,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
             </div>
 
             <div className="controls">
-                {!isEmojiMode && mode !== 'chrono' && (
+                {!isEmojiMode && !isEasyMode && mode !== 'chrono' && (
                     <button onClick={() => handleReveal()} disabled={revealedLines >= currentContent.length}>
                         Reveal More (- Points)
                     </button>
