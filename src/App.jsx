@@ -1,0 +1,150 @@
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabaseClient'
+import SearchBar from './components/SearchBar'
+import ModeSelector from './components/ModeSelector'
+import GameArea from './components/GameArea'
+import ScoreBoard from './components/ScoreBoard'
+import './App.css'
+
+function App() {
+    const [artists, setArtists] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedArtist, setSelectedArtist] = useState(null);
+    const [gameMode, setGameMode] = useState(null); // 'original', 'fr', 'synonym', 'emoji'
+    const [score, setScore] = useState(0);
+    const [modalData, setModalData] = useState({ show: false, points: 0 });
+
+    useEffect(() => {
+        getArtists();
+    }, []);
+
+    async function getArtists() {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('artists')
+                .select(`
+                    *,
+                    songs (*)
+                `);
+
+            if (error) {
+                console.error('Error fetching artists:', error);
+            } else {
+                setArtists(data || []);
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const handleArtistSelect = (artist) => {
+        setSelectedArtist(artist);
+        setGameMode(null); // Reset mode when artist changes
+    };
+
+    const handleModeSelect = (mode) => {
+        setGameMode(mode);
+    };
+
+    const handleGameOver = (points, songTitle, artistName) => {
+        setScore(prev => prev + points);
+        setModalData({ show: true, points, songTitle, artistName });
+    };
+
+    const closeModal = () => {
+        setModalData({ show: false, points: 0 });
+        setSelectedArtist(null);
+        setGameMode(null);
+    };
+
+    const handleBackToSearch = () => {
+        setSelectedArtist(null);
+        setGameMode(null);
+    };
+
+    useEffect(() => {
+        if (!modalData.show) return;
+
+        let listenerAdded = false;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                closeModal();
+            }
+        };
+
+        const timer = setTimeout(() => {
+            window.addEventListener('keydown', handleKeyDown);
+            listenerAdded = true;
+        }, 500);
+
+        return () => {
+            clearTimeout(timer);
+            if (listenerAdded) {
+                window.removeEventListener('keydown', handleKeyDown);
+            }
+            // Also try to remove it just in case, as the variable might not reflect correctly in closure if not careful,
+            // but here handleKeyDown is stable within this effect scope.
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [modalData.show]);
+
+    return (
+        <div className="app-container">
+            <header>
+                <h1>Lopotichat Music Quiz</h1>
+                <ScoreBoard score={score} />
+            </header>
+
+            <main>
+                {loading ? (
+                    <div className="loading">Loading artists...</div>
+                ) : (
+                    !selectedArtist && (
+                        <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
+                    )
+                )}
+
+                {selectedArtist && !gameMode && (
+                    <ModeSelector
+                        onModeSelect={handleModeSelect}
+                        onBack={handleBackToSearch}
+                    />
+                )}
+
+                {selectedArtist && gameMode && (
+                    <GameArea
+                        artist={selectedArtist}
+                        mode={gameMode}
+                        onGameOver={handleGameOver}
+                        onQuit={closeModal}
+                    />
+                )}
+            </main>
+
+            {modalData.show && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h2>Round Complete!</h2>
+                        <p className="points-gained">+{modalData.points} Points</p>
+                        <div className="modal-actions">
+                            <button onClick={closeModal} className="next-btn">Next Round (Enter)</button>
+                            <a
+                                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(modalData.artistName + ' ' + modalData.songTitle)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="youtube-btn"
+                            >
+                                📺 Voir sur YouTube
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default App
