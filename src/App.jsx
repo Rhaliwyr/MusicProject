@@ -4,6 +4,7 @@ import SearchBar from './components/SearchBar'
 import ModeSelector from './components/ModeSelector'
 import GameArea from './components/GameArea'
 import ScoreBoard from './components/ScoreBoard'
+import logo from './assets/logo.png'
 import './App.css'
 
 function App() {
@@ -94,6 +95,7 @@ function App() {
     return (
         <div className="app-container">
             <header>
+                <img src={logo} alt="Lopotichat Music Quiz Logo" className="app-logo" />
                 <h1>Lopotichat Music Quiz</h1>
                 <ScoreBoard score={score} />
             </header>

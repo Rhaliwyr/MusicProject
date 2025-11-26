@@ -85,6 +85,12 @@ const GameArea = ({ artist, mode, onGameOver, onQuit }) => {
         return text.replace(regex, '[***]');
     };
 
+    const handleGiveUp = () => {
+        if (!currentSong) return;
+        setTimerActive(false);
+        onGameOver(0, currentSong.title, artist.name);
+    };
+
     const handleGuess = () => {
         if (!currentSong) return;
 
@@ -157,6 +163,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit }) => {
                     placeholder="Enter song title..."
                 />
                 <button onClick={handleGuess}>Submit Guess</button>
+                <button onClick={handleGiveUp} className="give-up-btn">Give Up</button>
             </div>
 
             {feedback && <div className={`feedback ${feedback === 'Correct!' ? 'success' : 'error'}`}>{feedback}</div>}
