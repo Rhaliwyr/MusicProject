@@ -95,8 +95,10 @@ function App() {
     return (
         <div className="app-container">
             <header>
-                <img src={logo} alt="Lopotichat Music Quiz Logo" className="app-logo" />
-                <h1>Lopotichat Music Quiz</h1>
+                <div className="branding">
+                    <img src={logo} alt="Lopotichat Music Quiz Logo" className="app-logo" />
+                    <h1>Lopotichat Music Quiz</h1>
+                </div>
                 <ScoreBoard score={score} />
             </header>
 
@@ -130,6 +132,10 @@ function App() {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2>Round Complete!</h2>
+                        <div className="modal-song-info">
+                            <h3>{modalData.songTitle}</h3>
+                            <p>by {modalData.artistName}</p>
+                        </div>
                         <p className="points-gained">+{modalData.points} Points</p>
                         <div className="modal-actions">
                             <button onClick={closeModal} className="next-btn">Next Round (Enter)</button>
