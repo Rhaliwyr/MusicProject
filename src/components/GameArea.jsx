@@ -62,13 +62,17 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
 
 
     const isSongValidForMode = (song, mode) => {
+        const hasEffectiveContent = (arr) => {
+            return arr && arr.length > 0 && arr.some(item => item && item.trim() !== '');
+        };
+
         switch (mode) {
             case 'emoji':
-                return song.title_emoji && song.title_emoji.length > 0;
+                return hasEffectiveContent(song.title_emoji);
             case 'fr':
-                return song.lyrics_fr && song.lyrics_fr.length > 0;
+                return hasEffectiveContent(song.lyrics_fr);
             case 'synonym':
-                return song.lyrics_synonym && song.lyrics_synonym.length > 0;
+                return hasEffectiveContent(song.lyrics_synonym);
             default:
                 return true;
         }
