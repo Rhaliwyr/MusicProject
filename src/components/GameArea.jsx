@@ -61,14 +61,35 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
     }, [secondsElapsed, mode, timerActive, currentSong]);
 
 
+    const isSongValidForMode = (song, mode) => {
+        switch (mode) {
+            case 'emoji':
+                return song.title_emoji && song.title_emoji.length > 0;
+            case 'fr':
+                return song.lyrics_fr && song.lyrics_fr.length > 0;
+            case 'synonym':
+                return song.lyrics_synonym && song.lyrics_synonym.length > 0;
+            default:
+                return true;
+        }
+    };
+
     const startNewRound = (resetHistory = false) => {
         let currentPlayed = resetHistory ? new Set() : playedSongs;
 
-        // Filter available songs
-        const availableSongs = artist.songs.filter(song => !currentPlayed.has(song.id));
+        // Filter available songs based on history AND mode compatibility
+        const validSongsForMode = artist.songs.filter(song => isSongValidForMode(song, mode));
+
+        if (validSongsForMode.length === 0) {
+            alert("Aucune chanson disponible pour ce mode de jeu !");
+            onQuit();
+            return;
+        }
+
+        const availableSongs = validSongsForMode.filter(song => !currentPlayed.has(song.id));
 
         if (availableSongs.length === 0) {
-            alert("Vous avez joué toutes les chansons de cet artiste !");
+            alert("Vous avez joué toutes les chansons disponibles pour ce mode !");
             onQuit(); // Go back to menu
             return;
         }
