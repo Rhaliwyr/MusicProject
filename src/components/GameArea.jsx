@@ -141,6 +141,12 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
             }
         }
 
+        // Limit to 50% of letters revealed
+        const totalLetters = title.replace(/ /g, '').length;
+        if (revealedTitleIndices.size >= totalLetters / 2) {
+            return;
+        }
+
         if (unrevealedIndices.length > 0) {
             const randomIndex = unrevealedIndices[Math.floor(Math.random() * unrevealedIndices.length)];
             setRevealedTitleIndices(prev => {
@@ -195,7 +201,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                 <button className="quit-btn" onClick={onQuit}>Quit</button>
                 <h2>Guess the song by {artist.name}</h2>
                 <div className="mode-badge">{mode ? mode.toUpperCase() : 'ORIGINAL'}</div>
-                {(mode === 'chrono' || mode === 'easy') && <div className="timer">Time: {secondsElapsed}s</div>}
+                {mode === 'chrono' && <div className="timer">Time: {secondsElapsed}s</div>}
             </div>
 
             <div className={`lyrics-box ${isEmojiMode ? 'emoji-box' : ''} ${isEasyMode ? 'easy-box' : ''}`}>
