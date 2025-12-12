@@ -9,14 +9,12 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
     const [timerActive, setTimerActive] = useState(false);
     const [playedSongs, setPlayedSongs] = useState(new Set());
     const [revealedTitleIndices, setRevealedTitleIndices] = useState(new Set());
+    const [currentSnippet, setCurrentSnippet] = useState([]);
 
     useEffect(() => {
         if (artist) {
-            // Reset history when artist changes (or on initial mount)
-            // But wait, if we are just triggering new round, we don't want to reset history.
-            // This effect runs when artist changes.
             setPlayedSongs(new Set());
-            startNewRound(true); // true = reset history
+            startNewRound(true);
         }
     }, [artist]);
 
@@ -26,42 +24,27 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         }
     }, [triggerNewRound]);
 
-    // Timer & Auto-Reveal Logic for Chrono Mode
-    useEffect(() => {
-        let interval = null;
-        if (timerActive) {
-            interval = setInterval(() => {
-                setSecondsElapsed(prev => {
-                    const newTime = prev + 1;
-                    return newTime;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [timerActive, mode, currentSong]); // Added currentSong dependency for handleReveal access if needed, though handleReveal uses state. 
-    // Actually handleReveal inside effect might be stale closure if not careful. 
-    // Better to put logic inside setSecondsElapsed or separate effect.
-    // Let's separate auto-reveal logic to ensure fresh state access or use functional updates carefully.
+    // Timer & Auto-Reveal Logic
+    // ...
 
-    // Refined Auto-Reveal Effect
     useEffect(() => {
         if (!timerActive || secondsElapsed === 0) return;
 
         if (mode === 'chrono' && secondsElapsed % 3 === 0) {
             setRevealedLines(prev => {
-                if (currentSong && prev < currentSong.lyrics.length) {
+                if (currentSnippet && prev < currentSnippet.length) {
                     return prev + 1;
                 }
                 return prev;
             });
         } else if (mode === 'easy' && secondsElapsed % 5 === 0) {
-            // Easy mode: reveal a letter every 5 seconds
             revealRandomLetter();
         }
-    }, [secondsElapsed, mode, timerActive, currentSong]);
+    }, [secondsElapsed, mode, timerActive, currentSnippet]);
 
 
     const isSongValidForMode = (song, mode) => {
+        // ... (existing logic)
         const hasEffectiveContent = (arr) => {
             return arr && arr.length > 0 && arr.some(item => item && item.trim() !== '');
         };
@@ -86,6 +69,25 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         onQuit(); // Use the passed onQuit to return to menu
     };
 
+    const getFullContent = (song, mode) => {
+        if (!song) return [];
+        if (mode === 'emoji') return song.title_emoji || [];
+        switch (mode) {
+            case 'fr': return song.lyrics_fr || song.lyrics;
+            case 'synonym': return song.lyrics_synonym || song.lyrics;
+            default: return song.lyrics;
+        }
+    };
+
+    const selectRandomSnippet = (lines) => {
+        if (!lines || lines.length <= 10) return lines || [];
+        // Determine a safe range to pick 10 lines
+        // For lyrics, ideally we don't start at a weird place, but "random" was requested.
+        const maxStart = lines.length - 10;
+        const start = Math.floor(Math.random() * (maxStart + 1));
+        return lines.slice(start, start + 10);
+    };
+
     const startNewRound = (resetHistory = false) => {
         let currentPlayed = resetHistory ? new Set() : playedSongs;
 
@@ -106,7 +108,17 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
 
         const randomSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
 
+        // Compute snippet
+        const fullContent = getFullContent(randomSong, mode);
+        // Only slice for text modes (not emoji)
+        let snippet = fullContent;
+        if (mode !== 'emoji') {
+            snippet = selectRandomSnippet(fullContent);
+        }
+
         setCurrentSong(randomSong);
+        setCurrentSnippet(snippet);
+
         setPlayedSongs(prev => {
             const newSet = resetHistory ? new Set() : new Set(prev);
             newSet.add(randomSong.id);
@@ -121,18 +133,9 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         setTimerActive(true);
     };
 
-    const getContent = () => {
-        if (!currentSong) return [];
-        if (mode === 'emoji') return currentSong.title_emoji || [];
+    // Use currentSnippet instead of dynamic getContent
+    const currentContent = currentSnippet;
 
-        switch (mode) {
-            case 'fr': return currentSong.lyrics_fr || currentSong.lyrics;
-            case 'synonym': return currentSong.lyrics_synonym || currentSong.lyrics;
-            default: return currentSong.lyrics;
-        }
-    };
-
-    const currentContent = getContent();
     const isEmojiMode = mode === 'emoji';
     const isEasyMode = mode === 'easy';
 
@@ -237,9 +240,9 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                                     ))}
                                 </div>
                                 {/* Title clues below */}
-                                <div className="easy-clues">
+                                <div className="easy-clues-container">
                                     {currentSong && currentSong.title.split('').map((char, index) => (
-                                        <span key={index} className="easy-char">
+                                        <span key={index} className="easy-char-box">
                                             {char === ' ' ? '\u00A0\u00A0' : (revealedTitleIndices.has(index) ? char : '_')}
                                         </span>
                                     ))}
