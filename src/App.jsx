@@ -47,6 +47,12 @@ function App() {
         setGameMode(null); // Reset mode when artist changes
     };
 
+    const handleRandomSelection = () => {
+        if (artists.length === 0) return;
+        const randomArtist = artists[Math.floor(Math.random() * artists.length)];
+        handleArtistSelect(randomArtist);
+    };
+
     const handleModeSelect = (mode) => {
         setGameMode(mode);
     };
@@ -113,7 +119,12 @@ function App() {
                     <div className="loading">Loading artists...</div>
                 ) : (
                     !selectedArtist && (
-                        <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
+                        <div className="search-and-random">
+                            <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
+                            <button className="random-btn" onClick={handleRandomSelection}>
+                                🎲 Aléatoire
+                            </button>
+                        </div>
                     )
                 )}
 
