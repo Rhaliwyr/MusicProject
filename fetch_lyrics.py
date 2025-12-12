@@ -1,6 +1,21 @@
 import lyricsgenius
 import uuid
 import re
+from deep_translator import GoogleTranslator
+import nltk
+from nltk.corpus import wordnet
+import random
+import time
+from langdetect import detect
+
+# Ensure NLTK data is downloaded
+try:
+    nltk.data.find('corpora/wordnet.zip')
+    nltk.data.find('corpora/omw-1.4.zip')
+except LookupError:
+    print("Downloading NLTK data...")
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')
 
 def get_emoji_for_title(title):
     """
@@ -105,16 +120,8 @@ def get_emoji_for_title(title):
 
 def clean_lyrics(lyrics):
     """
-    Cleans the lyrics by removing section headers like [Chorus], [Verse 1], etc.
-    And splits into lines.
+    Cleans the lyrics by removing section headers and splitting into lines.
     """
-    # Remove lines that look like headers (e.g., [Chorus], [Verse 1])
-    # lines = [line for line in lyrics.split('\n') if not re.match(r'^\[.*\]$', line)]
-    
-    # Actually, keeping headers might be useful for structure, but the user asked for "integrality of lyrics".
-    # The schema uses an array of strings.
-    # Let's just split by newline and filter out empty lines.
-    
     lines = lyrics.split('\n')
     cleaned_lines = []
     for line in lines:
@@ -127,6 +134,103 @@ def clean_lyrics(lyrics):
         cleaned_lines.append(line)
         
     return cleaned_lines
+
+def translate_lyrics(lines, target='fr'):
+    """
+    Translates a list of lyric lines to the target language.
+    Chunking is important to avoid API limits and context loss.
+    """
+    translator = GoogleTranslator(source='auto', target=target)
+    translated_lines = []
+    
+    # Batch processing could be faster but might hit limits. Detailed processing per line or chunks.
+    # Let's try to batch lines in chunks of text < 5000 chars.
+    
+    buffer = ""
+    batch_lines = []
+    
+    for line in lines:
+        if len(buffer) + len(line) + 1 > 4500: # Safe margin
+            try:
+                translated_text = translator.translate(buffer)
+                if translated_text:
+                    translated_lines.extend(translated_text.split('\n'))
+                else:
+                    # Fallback if empty translation
+                    translated_lines.extend(batch_lines)
+            except Exception as e:
+                print(f"Translation error: {e}")
+                translated_lines.extend(batch_lines)
+            
+            buffer = ""
+            batch_lines = []
+            time.sleep(1) # Be nice to the API
+            
+        buffer += line + "\n"
+        batch_lines.append(line)
+        
+    if buffer:
+        try:
+            translated_text = translator.translate(buffer)
+            if translated_text:
+                translated_lines.extend(translated_text.split('\n'))
+            else:
+                translated_lines.extend(batch_lines)
+        except Exception as e:
+            print(f"Translation error: {e}")
+            translated_lines.extend(batch_lines)
+            
+    # Clean up empty lines from translation result
+    return [l.strip() for l in translated_lines if l.strip()]
+
+def get_synonyms(word, lang='fra'):
+    """
+    Get synonyms for a word in the specified language using WordNet.
+    """
+    synonyms = set()
+    for syn in wordnet.synsets(word, lang=lang):
+        for lemma in syn.lemmas(lang=lang):
+            synonyms.add(lemma.name().replace('_', ' '))
+    return list(synonyms)
+
+def generate_synonym_lyrics(lines, lang='fr'):
+    """
+    Replaces random words with synonyms.
+    Assumes lines are in the target language (default French).
+    """
+    synonym_lines = []
+    nltk_lang = 'fra' if lang == 'fr' else 'eng'
+    
+    for line in lines:
+        words = line.split()
+        new_words = []
+        for word in words:
+            # Clean punctuation for lookup
+            clean_word = re.sub(r'[^\w]', '', word.lower())
+            
+            if len(clean_word) > 3 and random.random() < 0.3: # 30% chance to replace long words
+                synonyms = get_synonyms(clean_word, lang=nltk_lang)
+                if synonyms:
+                    # Pick a random synonym that is not the word itself
+                    valid_synonyms = [s for s in synonyms if s.lower() != clean_word.lower()]
+                    if valid_synonyms:
+                        # Attempt to matching casing/punctuation? keeping it simple for now.
+                        new_word = random.choice(valid_synonyms)
+                        # primitive casing check
+                        if word[0].isupper():
+                            new_word = new_word.capitalize()
+                        if not word[-1].isalnum():
+                            new_word += word[-1]
+                        new_words.append(new_word)
+                    else:
+                        new_words.append(word)
+                else:
+                    new_words.append(word)
+            else:
+                new_words.append(word)
+        synonym_lines.append(" ".join(new_words))
+        
+    return synonym_lines
 
 def escape_sql_string(s):
     """
@@ -157,12 +261,32 @@ def generate_sql(artist_name, songs, artist_uuid):
         title = escape_sql_string(song['title'])
         lyrics_array = "ARRAY[\n    '" + "',\n    '".join([escape_sql_string(line) for line in song['lyrics']]) + "'\n  ]"
         
-        # Placeholders for future features
-        lyrics_fr = "ARRAY[]::text[]"
-        lyrics_synonym = "ARRAY[]::text[]"
+        # Use generated French lyrics or empty array
+        if song.get('lyrics_fr'):
+            lyrics_fr = "ARRAY[\n    '" + "',\n    '".join([escape_sql_string(line) for line in song['lyrics_fr']]) + "'\n  ]"
+        else:
+            lyrics_fr = "ARRAY[]::text[]"
+
+        # Use generated Synonym lyrics or empty array
+        if song.get('lyrics_synonym'):
+            lyrics_synonym = "ARRAY[\n    '" + "',\n    '".join([escape_sql_string(line) for line in song['lyrics_synonym']]) + "'\n  ]"
+        else:
+            lyrics_synonym = "ARRAY[]::text[]"
         
         emojis = get_emoji_for_title(song['title'])
-        emoji_array = "ARRAY['" + "', '".join(emojis) + "']"
+        # Ensure at least one empty string if no emojis, to match the pattern we saw? 
+        # Actually user wants FIX for empty strings. The fix was in JS.
+        # But if we want to be safe, we should provide valid emojis. 
+        # If emojis is empty, ARRAY[]::text[] might be better or ARRAY[''] depending on DB constraint?
+        # The schema says text[] null.
+        # JS Fix: "arr && arr.length > 0 && arr.some(item => item && item.trim() !== '')"
+        # So empty list is fine for JS now, but `ARRAY['']` was the problem.
+        # Let's generate ARRAY['emoji'] or ARRAY[]::text[] if empty.
+        
+        if emojis:
+             emoji_array = "ARRAY['" + "', '".join(emojis) + "']"
+        else:
+             emoji_array = "ARRAY[]::text[]"
         
         value = f"(\n  '{song_id}', \n  '{artist_uuid}', \n  '{title}', \n  {lyrics_array}, \n  {lyrics_fr}, \n  {lyrics_synonym}, \n  {emoji_array}\n)"
         values_list.append(value)
@@ -195,10 +319,8 @@ def main():
     print(f"Connecting to Genius...")
     genius = lyricsgenius.Genius(token, timeout=15, retries=3)
     
-    # Configure genius to be less verbose if needed, or handle timeouts
+    # Configure genius
     genius.verbose = False
-    genius.remove_section_headers = False # We handle cleaning ourselves if needed, or keep them.
-    # Keep section headers to ensure we get everything as requested
     genius.remove_section_headers = False 
     genius.skip_non_songs = True
     genius.excluded_terms = ["(Remix)", "(Live)"]
@@ -215,9 +337,38 @@ def main():
     processed_songs = []
     for song in artist.songs:
         print(f"Processing: {song.title}")
+        cleaned = clean_lyrics(song.lyrics)
+        
+        # Detect Language
+        full_text = "\n".join(cleaned)
+        try:
+            detected_lang = detect(full_text)
+        except:
+            detected_lang = 'en' # Fallback
+            
+        print(f"  - Detected Language: {detected_lang}")
+        
+        # Translation Logic
+        if detected_lang == 'fr':
+            print("  - Lyrics are already in French. Skipping translation.")
+            lyrics_fr = cleaned
+        else:
+            print(f"  - Translating to French...")
+            lyrics_fr = translate_lyrics(cleaned, target='fr')
+        
+        # Synonyms (generate from French)
+        if detected_lang == 'fr':
+            print(f"  - Generating Synonyms (from French)...")
+            lyrics_synonym = generate_synonym_lyrics(lyrics_fr, lang='fr')
+        else:
+            print(f"  - Original not French. Skipping synonyms.")
+            lyrics_synonym = []
+        
         processed_songs.append({
             'title': song.title,
-            'lyrics': clean_lyrics(song.lyrics)
+            'lyrics': cleaned,
+            'lyrics_fr': lyrics_fr,
+            'lyrics_synonym': lyrics_synonym
         })
         
     # Generate UUID for artist
