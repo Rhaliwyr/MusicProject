@@ -227,22 +227,24 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                                 ))}
                             </div>
                         ) : isEasyMode ? (
-                            <>
-                                <div className="easy-clues">
-                                    {currentSong.title.split('').map((char, index) => (
-                                        <span key={index} className="easy-char">
-                                            {char === ' ' ? '\u00A0\u00A0' : (revealedTitleIndices.has(index) ? char : '_')}
-                                        </span>
-                                    ))}
-                                </div>
-                                <div className="easy-lyrics-container">
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                {/* Lyrics take precedence */}
+                                <div className="easy-lyrics-container" style={{ flex: 1, overflowY: 'auto' }}>
                                     {currentContent.map((line, index) => (
                                         <p key={index} className="lyric-line">
                                             {maskLyrics(line, currentSong.title)}
                                         </p>
                                     ))}
                                 </div>
-                            </>
+                                {/* Title clues below */}
+                                <div className="easy-clues">
+                                    {currentSong && currentSong.title.split('').map((char, index) => (
+                                        <span key={index} className="easy-char">
+                                            {char === ' ' ? '\u00A0\u00A0' : (revealedTitleIndices.has(index) ? char : '_')}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         ) : (
                             <>
                                 {currentContent.slice(0, revealedLines).map((line, index) => (
