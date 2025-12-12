@@ -1,3 +1,4 @@
+import os
 import lyricsgenius
 import uuid
 import re
@@ -379,14 +380,18 @@ def main():
     sql_output = generate_sql(artist.name, processed_songs, artist_uuid)
     
     # Save to file
+    output_dir = "generated_sql"
+    os.makedirs(output_dir, exist_ok=True)
+    
     filename = f"seed_{artist.name.replace(' ', '_').lower()}.sql"
     # Remove special chars from filename
     filename = re.sub(r'[^\w\-_.]', '', filename)
+    file_path = os.path.join(output_dir, filename)
     
-    with open(filename, 'w', encoding='utf-8') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         f.write(sql_output)
         
-    print(f"Success! SQL file created: {filename}")
+    print(f"Success! SQL file created: {file_path}")
 
 if __name__ == "__main__":
     main()

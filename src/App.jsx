@@ -13,6 +13,7 @@ function App() {
     const [selectedArtist, setSelectedArtist] = useState(null);
     const [gameMode, setGameMode] = useState(null); // 'original', 'fr', 'synonym', 'emoji'
     const [score, setScore] = useState(0);
+    const [maxScore, setMaxScore] = useState(0);
     const [modalData, setModalData] = useState({ show: false, points: 0 });
     const [triggerNewRound, setTriggerNewRound] = useState(0);
 
@@ -59,6 +60,7 @@ function App() {
 
     const handleGameOver = (points, songTitle, artistName) => {
         setScore(prev => prev + points);
+        setMaxScore(prev => prev + 100);
         setModalData({ show: true, points, songTitle, artistName });
     };
 
@@ -111,7 +113,7 @@ function App() {
                     <img src={logo} alt="Lopotichat Music Quiz Logo" className="app-logo" />
                     <h1>Lopotichat Music Quiz</h1>
                 </div>
-                <ScoreBoard score={score} />
+                <ScoreBoard score={score} maxScore={maxScore} />
             </header>
 
             <main>
