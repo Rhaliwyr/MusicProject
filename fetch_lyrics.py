@@ -351,8 +351,8 @@ def main():
         
         # Translation Logic
         if detected_lang == 'fr':
-            print("  - Lyrics are already in French. Skipping translation.")
-            lyrics_fr = cleaned
+            print("  - Lyrics are already in French. Translating to English.")
+            lyrics_fr = translate_lyrics(cleaned, target='en')
         else:
             print(f"  - Translating to French...")
             lyrics_fr = translate_lyrics(cleaned, target='fr')

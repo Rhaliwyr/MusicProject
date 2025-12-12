@@ -141,6 +141,47 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         setFeedback('');
         setSecondsElapsed(0);
         setTimerActive(true);
+
+        if (mode === 'quiz') {
+            generateQuizOptions(randomSong, validSongsForMode);
+        }
+    };
+
+    const [quizOptions, setQuizOptions] = useState([]);
+
+    const generateQuizOptions = (correctSong, allSongs) => {
+        const distractors = [];
+        const possibleDistractors = allSongs.filter(s => s.id !== correctSong.id);
+
+        // Pick 3 unique distractors
+        while (distractors.length < 3 && possibleDistractors.length > 0) {
+            const index = Math.floor(Math.random() * possibleDistractors.length);
+            distractors.push(possibleDistractors[index]);
+            possibleDistractors.splice(index, 1);
+        }
+
+        const options = [...distractors, correctSong];
+        // Shuffle options
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+        setQuizOptions(options);
+    };
+
+    const handleQuizGuess = (song) => {
+        if (!currentSong) return;
+        if (song.id === currentSong.id) {
+            setFeedback('Correct!');
+            setTimerActive(false);
+            onGameOver(100, currentSong.title, currentSong.artistName || artist.name); // Prefer attached artistName if available
+        } else {
+            setFeedback('Wrong! It was ' + currentSong.title);
+            setTimerActive(false);
+            // Maybe give partial points or just 0? User didn't specify. 0 for now.
+            // Auto-close or wait? Reuse modal.
+            onGameOver(0, currentSong.title, currentSong.artistName || artist.name);
+        }
     };
 
     // Use currentSnippet instead of dynamic getContent
@@ -281,15 +322,31 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                     </div>
 
                     <div className="guess-input-area">
-                        <input
-                            type="text"
-                            value={guess}
-                            onChange={(e) => setGuess(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleGuess()}
-                            placeholder="Enter song title..."
-                        />
-                        <button onClick={handleGuess}>Submit Guess</button>
-                        <button onClick={handleGiveUp} className="give-up-btn">Give Up</button>
+                        {mode === 'quiz' ? (
+                            <div className="quiz-options-container">
+                                {quizOptions.map(option => (
+                                    <button
+                                        key={option.id}
+                                        className="quiz-option-btn"
+                                        onClick={() => handleQuizGuess(option)}
+                                    >
+                                        {option.title}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <>
+                                <input
+                                    type="text"
+                                    value={guess}
+                                    onChange={(e) => setGuess(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleGuess()}
+                                    placeholder="Enter song title..."
+                                />
+                                <button onClick={handleGuess}>Submit Guess</button>
+                                <button onClick={handleGiveUp} className="give-up-btn">Give Up</button>
+                            </>
+                        )}
                     </div>
 
                     {feedback && <div className={`feedback ${feedback === 'Correct!' ? 'success' : 'error'}`}>{feedback}</div>}

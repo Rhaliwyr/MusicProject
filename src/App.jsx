@@ -54,6 +54,21 @@ function App() {
         handleArtistSelect(randomArtist);
     };
 
+    const handleGlobalQuiz = () => {
+        if (artists.length === 0) return;
+        // Aggregate all songs
+        const allSongs = artists.flatMap(a => a.songs.map(s => ({ ...s, artistName: a.name }))); // Attach artist name potentially?
+        // Actually GameArea expects song object.
+        // We create a "Global" artist.
+        const globalArtist = {
+            id: 'global-quiz',
+            name: 'Global Quiz',
+            songs: allSongs
+        };
+        setSelectedArtist(globalArtist);
+        setGameMode('quiz');
+    };
+
     const handleModeSelect = (mode) => {
         setGameMode(mode);
     };
@@ -125,6 +140,9 @@ function App() {
                             <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
                             <button className="random-btn" onClick={handleRandomSelection}>
                                 🎲 Aléatoire
+                            </button>
+                            <button className="quiz-btn" onClick={handleGlobalQuiz}>
+                                📝 Quiz
                             </button>
                         </div>
                     )
