@@ -24,8 +24,18 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         }
     }, [triggerNewRound]);
 
-    // Timer & Auto-Reveal Logic
-    // ...
+    // Timer Logic
+    useEffect(() => {
+        let interval = null;
+        if (timerActive) {
+            interval = setInterval(() => {
+                setSecondsElapsed(prev => prev + 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timerActive]);
+
+    // Auto-Reveal Logic
 
     useEffect(() => {
         if (!timerActive || secondsElapsed === 0) return;
