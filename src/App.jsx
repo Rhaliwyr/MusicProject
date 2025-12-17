@@ -95,6 +95,12 @@ function App() {
         setGameMode(null);
     };
 
+    const handleReset = () => {
+        setScore(0);
+        setMaxScore(0);
+        setTriggerNewRound(0);
+    };
+
     useEffect(() => {
         if (!modalData.show) return;
 
@@ -138,12 +144,17 @@ function App() {
                     !selectedArtist && (
                         <div className="search-and-random">
                             <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
-                            <button className="random-btn" onClick={handleRandomSelection}>
-                                🎲 Aléatoire
-                            </button>
-                            <button className="quiz-btn" onClick={handleGlobalQuiz}>
-                                📝 Quiz
-                            </button>
+                            <div className="action-buttons">
+                                <button className="random-btn" onClick={handleRandomSelection}>
+                                    🎲 Aléatoire
+                                </button>
+                                <button className="quiz-btn" onClick={handleGlobalQuiz}>
+                                    📝 Quiz
+                                </button>
+                                <button className="reset-btn" onClick={handleReset}>
+                                    🔄 Reset
+                                </button>
+                            </div>
                         </div>
                     )
                 )}

@@ -254,7 +254,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                 const percentageRevealed = totalLetters > 0 ? (revealedCount / totalLetters) * 100 : 0;
                 baseScore = Math.max(100 - Math.round(percentageRevealed), 10);
             } else {
-                baseScore = Math.max(100 - (revealedLines * 10), 10);
+                baseScore = Math.max(100 - ((revealedLines - 1) * 10), 10);
             }
             onGameOver(baseScore, currentSong.title, artist.name);
         } else {
