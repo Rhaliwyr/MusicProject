@@ -174,7 +174,8 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
         if (song.id === currentSong.id) {
             setFeedback('Correct!');
             setTimerActive(false);
-            onGameOver(100, currentSong.title, currentSong.artistName || artist.name); // Prefer attached artistName if available
+            const score = Math.max(100 - ((revealedLines - 1) * 10), 10);
+            onGameOver(score, currentSong.title, currentSong.artistName || artist.name); // Prefer attached artistName if available
         } else {
             setFeedback('Wrong! It was ' + currentSong.title);
             setTimerActive(false);
@@ -330,7 +331,8 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
                                         className="quiz-option-btn"
                                         onClick={() => handleQuizGuess(option)}
                                     >
-                                        {option.title}
+
+                                        {option.title} ({option.artistName || artist.name})
                                     </button>
                                 ))}
                             </div>
