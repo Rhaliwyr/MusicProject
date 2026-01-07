@@ -122,15 +122,15 @@ def get_emoji_for_title(title):
 def clean_lyrics(lyrics):
     """
     Cleans the lyrics by removing section headers and splitting into lines.
+    Removes any content within square brackets [].
     """
     lines = lyrics.split('\n')
     cleaned_lines = []
     for line in lines:
+        # Remove anything in brackets (e.g., [Chorus], [Verse 1], [x3])
+        line = re.sub(r'\[.*?\]', '', line)
         line = line.strip()
         if not line:
-            continue
-        # Filter out lines that are just bracketed text like [Chorus], [Verse 1], etc.
-        if re.match(r'^\[.*\]$', line):
             continue
         cleaned_lines.append(line)
         
