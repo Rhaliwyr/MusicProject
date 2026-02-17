@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
+const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound, forcedSong }) => {
     const [currentSong, setCurrentSong] = useState(null);
     const [revealedLines, setRevealedLines] = useState(1);
     const [guess, setGuess] = useState('');
@@ -16,7 +16,7 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
             setPlayedSongs(new Set());
             startNewRound(true);
         }
-    }, [artist]);
+    }, [artist, forcedSong]); // React to forcedSong changes
 
     useEffect(() => {
         if (triggerNewRound > 0) {
@@ -109,14 +109,27 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound }) => {
             return;
         }
 
-        const availableSongs = validSongsForMode.filter(song => !currentPlayed.has(song.id));
-
-        if (availableSongs.length === 0) {
-            setErrorModal({ show: true, message: "Vous avez joué toutes les chansons disponibles pour ce mode !" });
-            return;
+        let randomSong;
+        if (forcedSong) {
+            // Verify forced song is valid
+            if (isSongValidForMode(forcedSong, mode)) {
+                randomSong = forcedSong;
+            } else {
+                console.warn("Forced song is not valid for current mode");
+                // Fallback or error?
+            }
         }
 
-        const randomSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+        if (!randomSong) {
+            const availableSongs = validSongsForMode.filter(song => !currentPlayed.has(song.id));
+
+            if (availableSongs.length === 0) {
+                setErrorModal({ show: true, message: "Vous avez joué toutes les chansons disponibles pour ce mode !" });
+                return;
+            }
+
+            randomSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+        }
 
         // Compute snippet
         const fullContent = getFullContent(randomSong, mode);

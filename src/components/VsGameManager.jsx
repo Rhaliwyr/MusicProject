@@ -9,6 +9,7 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
     const [songIds, setSongIds] = useState(initialSongIds || []);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [fullSongs, setFullSongs] = useState([]); // Song objects
+    const [poolSongs, setPoolSongs] = useState([]); // Songs for distractors
     const [loading, setLoading] = useState(false);
     const [totalScore, setTotalScore] = useState(0);
     const [playerName, setPlayerName] = useState('');
@@ -19,14 +20,14 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
 
     useEffect(() => {
         if (view === 'play' && songIds.length > 0) {
-            fetchSongs();
+            fetchSongsAndPool();
         }
     }, [songIds, view]);
 
-    const fetchSongs = async () => {
+    const fetchSongsAndPool = async () => {
         setLoading(true);
-        // Using 'in' to fetch all songs in the list
-        const { data, error } = await supabase
+        // Fetch session songs
+        const { data: sessionData, error } = await supabase
             .from('songs')
             .select(`
                 *,
@@ -34,12 +35,33 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
             `)
             .in('id', songIds);
 
-        if (data) {
-            // Map artist name to top level for GameArea compatibility
-            const processed = data.map(s => ({ ...s, artistName: s.artist?.name }));
+        // Fetch a pool for distractors (e.g. 50 random songs)
+        // Since we can't easily do random in one query without RPC, let's just fetch a chunk
+        const { data: poolData } = await supabase
+            .from('songs')
+            .select(`
+                *,
+                artist:artists(name)
+            `)
+            .limit(50);
+
+        if (sessionData && poolData) {
+            const process = (list) => list.map(s => ({ ...s, artistName: s.artist?.name }));
+
+            const processedSession = process(sessionData);
+            const processedPool = process(poolData);
+
             // Reorder based on songIds
-            const ordered = songIds.map(id => processed.find(s => s.id === id)).filter(Boolean);
+            const ordered = songIds.map(id => processedSession.find(s => s.id === id)).filter(Boolean);
             setFullSongs(ordered);
+
+            // Merge pool and session songs to ensure we have enough
+            // Use Map to deduplicate
+            const combined = new Map();
+            processedPool.forEach(s => combined.set(s.id, s));
+            processedSession.forEach(s => combined.set(s.id, s));
+
+            setPoolSongs(Array.from(combined.values()));
         }
         setLoading(false);
     };
@@ -120,9 +142,10 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
     const currentSong = fullSongs[currentIndex];
 
     // Create a fake artist object that GameArea expects
+    // We pass poolSongs as 'songs' so GameArea can pick distractors
     const fakeArtist = {
         name: "Mode Défi",
-        songs: [currentSong]
+        songs: poolSongs
     };
 
     return (
@@ -136,7 +159,8 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
             {!roundResult ? (
                 <GameArea
                     artist={fakeArtist}
-                    mode="original"
+                    forcedSong={currentSong}
+                    mode="quiz"
                     onGameOver={onRoundEnd}
                     onQuit={onExit}
                     triggerNewRound={0}

@@ -1468,3 +1468,14 @@ h1 {
 .vs-btn:active {
     transform: translateY(0);
 }
+
+/* Hide number input arrows */
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spin {
+    -moz-appearance: textfield;
+}

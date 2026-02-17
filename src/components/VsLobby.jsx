@@ -108,10 +108,16 @@ const VsLobby = ({ onSessionStart, onBack }) => {
                         max="20"
                         value={songCount}
                         onChange={(e) => setSongCount(e.target.value)}
+                        className="no-spin"
                     />
                 </div>
-                <button onClick={handleCreateSession} disabled={loading}>
-                    {loading ? 'Creating...' : 'Generate & Play'}
+                <button
+                    onClick={handleCreateSession}
+                    disabled={loading}
+                    className="quiz-btn" // Reuse existing class for style
+                    style={{ width: '100%', justifyContent: 'center' }}
+                >
+                    {loading ? 'Creating...' : '🎯 Generate & Play'}
                 </button>
             </div>
 
@@ -128,12 +134,22 @@ const VsLobby = ({ onSessionStart, onBack }) => {
                         onChange={(e) => setRoomKey(e.target.value.toUpperCase())}
                     />
                 </div>
-                <div className="button-group">
-                    <button onClick={handleJoinSession} disabled={loading}>
-                        {loading ? 'Joining...' : 'Play Challenge'}
+                <div className="button-group" style={{ flexDirection: 'column' }}>
+                    <button
+                        onClick={handleJoinSession}
+                        disabled={loading}
+                        className="random-btn" // Reuse existing class for style
+                        style={{ width: '100%', justifyContent: 'center' }}
+                    >
+                        {loading ? 'Joining...' : '⚔️ Play Challenge'}
                     </button>
-                    <button onClick={handleViewLeaderboard} disabled={loading} className="secondary-btn">
-                        View Leaderboard
+                    <button
+                        onClick={handleViewLeaderboard}
+                        disabled={loading}
+                        className="menu-btn"
+                        style={{ fontSize: '1rem', padding: '0.8rem' }}
+                    >
+                        🏆 View Leaderboard
                     </button>
                 </div>
             </div>
