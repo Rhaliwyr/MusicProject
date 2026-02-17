@@ -36,16 +36,29 @@ const VsGameManager = ({ sessionId, initialSongIds, initialMode, onExit }) => {
             .in('id', songIds);
 
         // Fetch a pool for distractors (e.g. 50 random songs)
-        // Since we can't easily do random in one query without RPC, let's just fetch a chunk
-        const { data: poolData } = await supabase
+        // 1. Get all song IDs
+        const { data: allIds } = await supabase
             .from('songs')
-            .select(`
-                *,
-                artist:artists(name)
-            `)
-            .limit(50);
+            .select('id');
 
-        if (sessionData && poolData) {
+        let poolData = [];
+        if (allIds && allIds.length > 0) {
+            // 2. Shuffle and pick 50 random IDs
+            const shuffled = allIds.map(x => x.id).sort(() => 0.5 - Math.random()).slice(0, 50);
+
+            // 3. Fetch details for these IDs
+            const { data } = await supabase
+                .from('songs')
+                .select(`
+                    *,
+                    artist:artists(name)
+                `)
+                .in('id', shuffled);
+
+            if (data) poolData = data;
+        }
+
+        if (sessionData) {
             const process = (list) => list.map(s => ({ ...s, artistName: s.artist?.name }));
 
             const processedSession = process(sessionData);
