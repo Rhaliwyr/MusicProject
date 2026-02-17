@@ -4,6 +4,8 @@ import SearchBar from './components/SearchBar'
 import ModeSelector from './components/ModeSelector'
 import GameArea from './components/GameArea'
 import ScoreBoard from './components/ScoreBoard'
+import VsLobby from './components/VsLobby'
+import VsGameManager from './components/VsGameManager'
 import logo from './assets/logo.png'
 import './App.css'
 
@@ -16,6 +18,8 @@ function App() {
     const [maxScore, setMaxScore] = useState(0);
     const [modalData, setModalData] = useState({ show: false, points: 0 });
     const [triggerNewRound, setTriggerNewRound] = useState(0);
+    const [showVsLobby, setShowVsLobby] = useState(false);
+    const [vsSession, setVsSession] = useState(null);
 
     useEffect(() => {
         getArtists();
@@ -101,6 +105,22 @@ function App() {
         setTriggerNewRound(0);
     };
 
+    const handleVsClick = () => {
+        setShowVsLobby(true);
+        setSelectedArtist(null);
+        setGameMode(null);
+    };
+
+    const handleVsSessionStart = (sessionId, songIds, mode) => {
+        setVsSession({ sessionId, songIds, mode });
+        setShowVsLobby(false);
+    };
+
+    const handleVsExit = () => {
+        setVsSession(null);
+        setShowVsLobby(false);
+    };
+
     useEffect(() => {
         if (!modalData.show) return;
 
@@ -141,7 +161,19 @@ function App() {
                 {loading ? (
                     <div className="loading">Loading artists...</div>
                 ) : (
-                    !selectedArtist && (
+                    vsSession ? (
+                        <VsGameManager
+                            sessionId={vsSession.sessionId}
+                            initialSongIds={vsSession.songIds}
+                            initialMode={vsSession.mode}
+                            onExit={handleVsExit}
+                        />
+                    ) : showVsLobby ? (
+                        <VsLobby
+                            onSessionStart={handleVsSessionStart}
+                            onBack={() => setShowVsLobby(false)}
+                        />
+                    ) : !selectedArtist && (
                         <div className="search-and-random">
                             <SearchBar onArtistSelect={handleArtistSelect} artists={artists} />
                             <div className="action-buttons">
@@ -150,6 +182,9 @@ function App() {
                                 </button>
                                 <button className="quiz-btn" onClick={handleGlobalQuiz}>
                                     📝 Quiz
+                                </button>
+                                <button className="vs-btn" onClick={handleVsClick}>
+                                    ⚔️ VS
                                 </button>
                                 <button className="reset-btn" onClick={handleReset}>
                                     🔄 Reset

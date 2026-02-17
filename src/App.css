@@ -1255,3 +1255,216 @@ h1 {
     justify-content: center;
     margin-bottom: 2rem;
 }
+
+/* VS Mode Styles */
+.vs-lobby {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    border: 1px solid #333;
+    animation: fadeIn 0.5s ease-out;
+    position: relative;
+}
+
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.back-btn:hover {
+    color: white;
+    border-color: white;
+}
+
+.lobby-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #242424;
+    border-radius: 12px;
+}
+
+.lobby-section h3 {
+    margin-top: 0;
+    color: #ffd700;
+}
+
+.divider {
+    font-weight: bold;
+    color: #555;
+    margin: 1rem 0;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-group input {
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #111;
+    color: white;
+    font-size: 1.1rem;
+    text-align: center;
+    width: 150px;
+    text-transform: uppercase;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.secondary-btn {
+    background: #444 !important;
+}
+
+.vs-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #111;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.vs-info-badge {
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.room-key {
+    color: #ffd700;
+    letter-spacing: 2px;
+}
+
+.vs-summary-container {
+    background: #1a1a1a;
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+}
+
+.final-score {
+    font-size: 3rem;
+    color: #4caf50;
+    margin: 2rem 0;
+}
+
+.submit-score-section {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.name-input {
+    padding: 1rem;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    border: 1px solid #444;
+    background: #222;
+    color: white;
+}
+
+.submit-btn {
+    background: #646cff;
+    color: white;
+    border: none;
+    padding: 0 2rem;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.leaderboard-container {
+    background: #1a1a1a;
+    padding: 2rem;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.room-key-display {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: #aaa;
+}
+
+.score-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+
+.score-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+    font-size: 1.1rem;
+}
+
+.score-entry.first-place {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 100%);
+    border-left: 4px solid #ffd700;
+}
+
+.rank {
+    width: 40px;
+    color: #888;
+}
+
+.player-name {
+    flex: 1;
+    font-weight: bold;
+}
+
+.player-score {
+    color: #4caf50;
+}
+
+.vs-btn {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: black;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    white-space: nowrap;
+}
+
+.vs-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.vs-btn:active {
+    transform: translateY(0);
+}
