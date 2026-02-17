@@ -166,11 +166,47 @@ const GameArea = ({ artist, mode, onGameOver, onQuit, triggerNewRound, forcedSon
         const distractors = [];
         const possibleDistractors = allSongs.filter(s => s.id !== correctSong.id);
 
-        // Pick 3 unique distractors
-        while (distractors.length < 3 && possibleDistractors.length > 0) {
-            const index = Math.floor(Math.random() * possibleDistractors.length);
-            distractors.push(possibleDistractors[index]);
-            possibleDistractors.splice(index, 1);
+        // Group by artist name to ensure diversity
+        const songsByArtist = {};
+        possibleDistractors.forEach(s => {
+            const artistName = s.artistName || artist.name;
+            if (!songsByArtist[artistName]) {
+                songsByArtist[artistName] = [];
+            }
+            songsByArtist[artistName].push(s);
+        });
+
+        const availableArtists = Object.keys(songsByArtist).filter(a => a !== (correctSong.artistName || artist.name));
+
+        // Try to pick 3 unique artists first
+        let attempts = 0;
+        while (distractors.length < 3 && availableArtists.length > 0 && attempts < 10) {
+            // Pick a random artist
+            const randomArtistIndex = Math.floor(Math.random() * availableArtists.length);
+            const artistName = availableArtists[randomArtistIndex];
+
+            // Pick a random song from that artist
+            const artistSongs = songsByArtist[artistName];
+            const randomSongIndex = Math.floor(Math.random() * artistSongs.length);
+            const selectedSong = artistSongs[randomSongIndex];
+
+            // Add to distractors
+            distractors.push(selectedSong);
+
+            // Remove artist from available pool to avoid repeat
+            availableArtists.splice(randomArtistIndex, 1);
+            attempts++;
+        }
+
+        // Fill remaining slots if we couldn't find enough unique artists
+        if (distractors.length < 3) {
+            const usedIds = new Set(distractors.map(d => d.id));
+            const remaining = possibleDistractors.filter(s => !usedIds.has(s.id));
+            while (distractors.length < 3 && remaining.length > 0) {
+                const index = Math.floor(Math.random() * remaining.length);
+                distractors.push(remaining[index]);
+                remaining.splice(index, 1);
+            }
         }
 
         const options = [...distractors, correctSong];
